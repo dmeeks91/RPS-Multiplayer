@@ -1,0 +1,147 @@
+#navTitle {
+    width: 100%;
+    text-align: center;
+}
+
+.container {
+    width: 95%;
+    margin: auto;
+    max-width: 775px;
+}
+.content-block-title {
+    padding: 15px;
+    margin: auto;
+    margin-top: 30px;
+    font-size: larger;
+    background-color: #2196f3;
+    color: white;
+    border-top-left-radius:  5px;
+    border-top-right-radius: 5px;
+}
+
+#cardDetails {
+    margin: auto;
+    border-radius: 5px;
+    padding: 2%;
+}
+
+.card-content {
+    margin-left: 2%;
+} 
+.evenBtn {
+    border: 2px solid #fff;
+    border-radius: 25px;
+    text-align: center;
+    background-color: #2196f3;
+    color: #fff !important;
+    font-size: 115% !important;
+    margin-bottom: 2%;
+}
+.oddBtn {
+    border: 2px solid #2196f3;
+    border-radius: 25px;
+    text-align: center;
+    background-color: #fff;
+    color: #2196f3 !important;
+    font-size: 115% !important;
+    margin-bottom: 2%;
+}
+
+.ansBtn.default:hover{
+    background-color: lightblue;
+    font-weight: bold;
+}
+
+li .oddBtn:parent, li .evenBtn:parent {
+    margin-bottom: 15px;
+}
+
+.secTime {
+    height: 144px;
+    vertical-align: middle;
+}
+
+#timeDiv {
+    width: 100%;
+    text-align: center;
+    padding: 0px;
+    margin: 0px;
+    font-size: 500%;
+}
+
+#timerDiv {
+    width: 85%;
+    margin: auto;
+    margin-top: 6%;
+    box-shadow: 0 1px 3px rgb(33, 150, 243), 0 1px 2px rgb(33, 150, 243);
+}
+
+#timerContent {
+    margin-left: 2%;
+    margin-right: 10%;
+    padding-bottom: 5%;
+}
+
+#qHolder {
+    text-align: center;
+    font-style: italic;
+    font-size: 135%;
+}
+
+#sBtnHolder {
+    padding-top: 15px;
+}
+.toast-success {
+    width: 100% !important;
+    margin: auto !important;
+    left: .25% !important;
+    background-color: #31c731c2 !important;
+}
+
+.toast-error {
+    width: 100% !important;
+    margin: auto !important;
+    left: .25% !important;
+    background-color: #ab312a !important;
+}
+
+.incorrect {
+    background-color: #ef514887;
+    border-color: #f11307;
+    color: #f11307 !important;
+    box-shadow: 2.5px 5px 4px #de6d5e;
+}
+
+.correct {
+    background-color: #14de2a8c;
+    border-color: #299829;
+    color: #299829 !important;
+    box-shadow: 2.5px 5px 4px #5b8660;
+}
+
+.unselected {
+    opacity: .2;
+}
+
+#toast-container {
+    top: 50% !important;
+    width: 100%;
+    margin: auto;
+}
+
+#newGame {
+    margin: auto;
+    margin-top: 10%;
+    font-size: 250% !important;
+    padding: 5% 10% 5% 10%;
+    box-shadow: 2.5px 5px 4px #20384a;
+}
+
+p {
+    font-weight: bold;
+    font-size: 115%;
+}
+
+.f7-icons {
+    color: #2196f3;
+}
