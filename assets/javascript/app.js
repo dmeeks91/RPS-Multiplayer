@@ -17,17 +17,14 @@ $(document).ready(function(){
         myPID: '', //playerID
         myName: '',
         oppPID: '',//opponent playerID
-        //myUID: '', //universal unique ID
         myInfo: {
             name:'',
-            //id:'',
             move:"",
             win:0,
             loss:0,
         },
         oppInfo: {
             name:'',
-            //id:'',
             move: "",
             win: 0,
             loss: 0,
@@ -65,7 +62,7 @@ $(document).ready(function(){
 
                         if (init)
                         {
-                            //check existing players when you load the page
+                            //Check existing players when you load the page
                             var p1Exists = false,
                             p2Exists = false;
                             
@@ -83,7 +80,7 @@ $(document).ready(function(){
                         }
                         else
                         {
-                            //
+                            //Check existing players after clicking play
                             var p1IsMe = false,
                                 p2IsMe = true;
 
@@ -110,13 +107,11 @@ $(document).ready(function(){
                 {
                     if (data.p1 || data.p2)
                     {
-                        //already playing
-                        self.setMyPID((data.p1) ? 'p1' : 'p2');
+                        //already playing  
+                        //This happens if user types in the same name as existing player
+                        self.setMyPID((data.p1) ? 'p1' : 'p2');                        
                         self.myInfo.name = self.myName;
-                        self.updateFB('playersObj', self.myPID, self.myInfo);
-                        self.hideShow([`#${self.myPID}Controls`], false);
-                        self.hideShow(['#userInfo'], true);
-                        $(`#${self.myPID}Title`).text(self.myInfo.name);
+                        self.showPlayerInfo('me');
                     }
                     else
                     {
@@ -124,17 +119,15 @@ $(document).ready(function(){
                         {
                             if (sObj.bool)
                             {
-                                //self.myPID = sObj.spot;
                                 self.setMyPID(sObj.spot);
                                 self.myInfo.name = self.myName;
-                                self.updateFB('playersObj', self.myPID, self.myInfo);
-                                self.hideShow([`#${self.myPID}Controls`], false);
-                                self.hideShow(['#userInfo'], true);
-                                $(`#${self.myPID}Title`).text(self.myInfo.name);
+                                self.showPlayerInfo('me');
                             }
+
                             else
                             {
                                 //startNew Game
+
                             }
                         })
                     }
@@ -151,22 +144,16 @@ $(document).ready(function(){
                 b = srcPath.indexOf('_'),
                 type = srcPath.substring(a, b);
 
-            this.updateFB('playerProp','move',type)
+            this.updateFB('playerProp','move', type);
         },
         changePlayerValue: function(key,value){
-            /* this.fbObj[this.myPID][key] = value;
-            this.updateFB(key, value); */
         },
         isMyTurn: function(){
-            /* return this.fbObj.whosTurn === this.myPID; */ 
         },
         nextTurn: function(){
 
         },
         makeMove: function(type){
-            /* this.changePlayerValue('move', type);
-            //this.whosTurn = (this.myPID === 'p1') ? 'p2' : 'p1';
-            this.updateFB('whosTurn', this.whosTurn); */
         },
         getFBRef: function(type, key)
         {
@@ -217,9 +204,6 @@ $(document).ready(function(){
 
             if (thisRef != null) thisRef.update(value);
         },
-        updateThis: function(){
-
-        },
         startUp: function(){
             var self = this;
 
@@ -237,37 +221,57 @@ $(document).ready(function(){
                 else if(pObj.p1 && !pObj.p2)
                 {
                     self.setMyPID((pObj.p1 && !pObj.p2) ? 'p2' : 'p1');
-                    //p1 exists and p2 doesn't exist
                     self.getFBVal('playersObj',self.oppPID).then(function(pObj){
                         self.oppInfo = pObj;
-                        //self.setMyPID('p2');
                         self.showPlayerInfo('opp');                        
                     })
                 }
-                /* else if (!pObj.p1 && pObj.p2)
-                {
-                    //p2 exists and p2 doesn't exist
-                    self.getFBVal('playersObj','p2').then(function(p2Obj){
-                        self.oppInfo = p2Obj;
-                        self.setMyPID('p1');
-                        self.showPlayerInfo('opp');                        
-                    })
-                } */
             });
         },
         showPlayerInfo: function(type){
             var self = this,
                 id = (type === 'me') ? self.myPID : self.oppPID
                 info = (type === 'me') ? self.myInfo : self.oppInfo;
+
             self.updateFB('playersObj', id, info);
-            self.hideShow([`#${id}Controls`], false);
-            self.hideShow(['#userInfo'], (type === 'me') ? true : false);
+            self.hideShow([`#${id}Controls`], (type != 'me'));
+            self.hideShow(['#userInfo'],(self.myName != ''));
 
             $(`#${id}Title`).text(info.name);
         },
         setMyPID: function(id){
             this.myPID = id;
             this.oppPID = (id === 'p1') ? 'p2' : 'p1';
+        },
+        regPlayerChange: function(type, pInfo, key)
+        {
+            if (type === 'blank') return;           
+
+            if (type === 'NA')
+            {
+                this.setMyPID(key); 
+                type = 'opp';
+            }
+
+            this[(type === 'me') ? 'myInfo' : 'oppInfo'] = pInfo;
+
+            /* switch (type)
+            {
+                case 'blank':
+                    return;
+                case 'me':
+                    this.myInfo = pInfo;
+                    break;
+                case 'NA': //opp has logged in but you haven't
+                    this.setMyPID(key); 
+                    type = 'opp'; 
+                    //no break on purpoe  
+                case 'opp':
+                    this.oppInfo = pInfo;    
+                    break;
+            } */
+
+            this.showPlayerInfo(type);
         }
     };
 
@@ -288,6 +292,45 @@ $(document).ready(function(){
         {
             //setUpGame with UserDetails
         }
+    });
+
+    db.ref('game/players').on('child_added', function(snapshot) {
+        var player = snapshot.val();
+        if(player.name != "")//player != null &&
+        {
+            //someone has already joined the game on page load
+            rpsGame.setMyPID((snapshot.key === 'p1') ? 'p2' : 'p1')       
+        }
+
+        //console.log('which player: ' + snapshot.key);
+        //console.log(`myPID: ${rpsGame.myPID}, myName: ${rpsGame.myName}`);
+    });
+
+    /* db.ref('game/players').on('value', function(snapshot) {
+        console.log(snapshot.val());
+    }) */
+
+    //setRef to track p1 changes
+    db.ref('game/players').child('p1').on('value', function(snapshot) {
+        var player = snapshot.val(),
+            pKey = snapshot.key;
+            type = (player.name != "" && rpsGame.myName != "" && rpsGame.myPID != "") ? 
+                   ((pKey != rpsGame.myPID) ? 'opp' : 'me') : 
+                   (player.name != "" && player.name != rpsGame.myName) ? 'NA' :'blank';
+            
+            rpsGame.regPlayerChange(type, player, 'p2');
+            if (type != 'blank')console.log(`change to ${type}`);  
+    });
+
+    //setRef to track p2 changes
+    db.ref('game/players').child('p2').on('value', function(snapshot) {
+        var player = snapshot.val(),
+            type =  (player.name != "" && rpsGame.myName != "" && rpsGame.myPID != "") ? 
+                    ((snapshot.key != rpsGame.myPID) ? 'opp' : 'me') : 
+                    (player.name != "" && player.name != rpsGame.myName) ? 'NA' : 'blank';
+
+            rpsGame.regPlayerChange(type, player, 'p1');
+            if (type != 'blank')console.log(`change to ${type}`);
     });
 
     $(".btnRPS").on('click', function(){
