@@ -2,7 +2,6 @@
     width: 100%;
     text-align: center;
 }
-
 .container {
     width: 95%;
     margin: auto;
@@ -47,50 +46,43 @@
     margin-bottom: 2%;
 }
 
+.moveImage{
+    width: 90%;
+    height: 45px;
+    margin: auto;
+}
+.bigMove{
+    margin: auto;
+}
+
+.card-footer{
+    max-height: 90px;
+}
+
 .ansBtn.default:hover{
     background-color: lightblue;
     font-weight: bold;
 }
 
-li .oddBtn:parent, li .evenBtn:parent {
-    margin-bottom: 15px;
-}
-
-.secTime {
-    height: 144px;
-    vertical-align: middle;
-}
-
-#timeDiv {
-    width: 100%;
-    text-align: center;
-    padding: 0px;
-    margin: 0px;
-    font-size: 500%;
-}
-
-#timerDiv {
+#greetingDiv {
     width: 85%;
     margin: auto;
     margin-top: 6%;
     box-shadow: 0 1px 3px rgb(33, 150, 243), 0 1px 2px rgb(33, 150, 243);
 }
 
-#timerContent {
-    margin-left: 2%;
-    margin-right: 10%;
-    padding-bottom: 5%;
+#gameZone {
+    max-width: 95%;
+    margin-top: 5%;
 }
 
-#qHolder {
-    text-align: center;
-    font-style: italic;
-    font-size: 135%;
+#gameHolder {
+    margin-left: unset;
+    box-shadow: 2px 4px 2px #1475c2;
+    border-radius: 5px;
+    border: 1px solid #acd6f8;
 }
 
-#sBtnHolder {
-    padding-top: 15px;
-}
 .toast-success {
     width: 100% !important;
     margin: auto !important;
@@ -129,17 +121,119 @@ li .oddBtn:parent, li .evenBtn:parent {
     margin: auto;
 }
 
-#newGame {
-    margin: auto;
-    margin-top: 10%;
-    font-size: 250% !important;
-    padding: 5% 10% 5% 10%;
-    box-shadow: 2.5px 5px 4px #20384a;
+.myBtn{
+    border: 2px solid #fff;
+    border-radius: 25px;
+    text-align: center;
+    background-color: #2196f3;
+    color: #fff !important;
+    box-shadow: 1px 3px 4px #20384a;
+    font-size: 120%;
+    font-weight: bold;
+    width: 100%;
+    min-width: 75%;
 }
 
-p {
+.w80{
+    width: 80%;
+}
+
+.w20{
+    height: 100%;
+    width: 20%;
+}
+
+#gZMainCard{
+    max-width: 1175px;
+    margin: auto;
+}
+
+.gZHeader{
+    color: white;
+    text-align: center;
+    background-color: #2196f3;
+    border: 1px solid white;
+}
+
+#p1Zone, #p2Zone {
+    box-shadow: unset;
+}
+
+#resultHeader{
+    text-align: center;
+    color: #2196f3;
+}
+
+.gZTitle, #resultHeader {
+    width: 100%;
+    padding-bottom: unset;
+    margin: unset;
     font-weight: bold;
-    font-size: 115%;
+}
+
+.gZContent {
+    padding: unset;
+    margin: unset;
+    border: 2px solid #2196f3;
+    border-radius: 2px;
+}
+
+.gZContentTop{
+    height: 150px;
+}
+
+.gZContentBottom{
+    height: 50px;
+}
+.gRContent{
+    height: 200px;
+    border-top: 2px solid #2196f3;
+    border-bottom: 2px solid #2196f3;
+}
+
+.gRImage{
+    width: 98%;
+    margin: auto;
+    height: 180px;
+    margin-top: 10px;
+}
+
+.gZResult {
+    background-color: unset;
+    border: none;
+    box-shadow: unset !important;
+}
+
+.gZFooter {
+    background-color: #2196f3;
+    border: 1px solid white;
+    height: 55px;
+}
+
+.gZFooter .row{
+    height: 98%;
+    width: 100%;
+}
+
+.colWL{
+    height: 100%;
+} 
+
+.spWL, .spScore{    
+    text-align: center;
+    color: #2196f3;
+    font-weight: bold;
+    text-align: center;
+    width: 75%;
+    margin: auto;    
+}
+.spScore{
+    font-size: 125%;
+    padding: 1%;
+}
+
+.spWL{
+    border-bottom: 1px solid;
 }
 
 .f7-icons {

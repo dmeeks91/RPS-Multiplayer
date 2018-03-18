@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Required meta tags-->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Color theme for statusbar -->
+    <meta name="theme-color" content="#2196f3">
+    
+    <!-- Your app title -->
+    <title>RPS Multiplayer</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>   
+    <link rel="stylesheet" href="assets/css/framework7.min.css">
+    <link rel="stylesheet" href="assets/css/framework7-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+  </head>
+  <body>
+    <div class='views'>
+        <div class="view view-main">
+            <div class="navbar">
+                <div class="navbar-inner">
+                    <div id="navTitle">Rock Paper Scissors</div>
+                </div>
+            </div>
+            <div class="pages navbar-through">
+                <div data-page='main' class="page">
+                    <div class="page-content">
+                        <div class="container" id="userInfo">                        
+                            <div class="card" id="greetingDiv">
+                                <div class="card-content">
+                                    <div class="list">
+                                        <ul>
+                                            <li>
+                                                <div class="item-content">
+                                                    <div class="item-media"><i class="f7-icons">person_fill</i></div>
+                                                    <div class="item-inner">
+                                                        <div class="item-input-wrap w80">
+                                                            <input type="text" placeholder="Your name" id='myName'>
+                                                        </div>
+                                                        <div class="item-after w20">
+                                                            <a href="#" class="item-link myBtn">PLAY</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div> 
+                                </div>  
+                            </div>
+                        </div>
+                        <div class="container" id="gameZone">
+                            <div class="card" id="gZMainCard">
+                                <div class="card-content" id="gameHolder">
+                                    <div class="row">
+                                        <div class="col-100 tablet-30">
+                                            <div class="card" id="p1Zone">
+                                                <div class="card-header gZHeader">
+                                                    <p class="gZTitle" id="p1Title"></p>
+                                                </div>
+                                                <div class="card-content gZContent">
+                                                    <div class="row gZContentTop" id="p1Move">
+
+                                                    </div>
+                                                    <div class="row gZContentBottom">
+                                                        <div class="col-50 colWL Lft">
+                                                            <div class="row">
+                                                                <span class="spWL">Wins</span>
+                                                            </div>
+                                                            <div class="row">
+                                                                <span class="spScore" id="p1Win">0</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-50 colWL Rght">
+                                                            <div class="row">
+                                                                <span class="spWL">Losses</span>
+                                                            </div>
+                                                            <div class="row">
+                                                                <span class="spScore" id="p1Lose">0</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card-footer gZFooter">
+                                                    <div class="row" id="p1Controls">
+                                                        <div class="tablet-25">
+                                                            <img class="moveImage" src="assets/images/Click.png">
+                                                        </div>
+                                                        <div class="tablet-25">
+                                                            <a href="#" class="btnRPS item-link disabled">
+                                                                <img class="moveImage" src="assets/images/rock_L.png">
+                                                            </a>
+                                                        </div>
+                                                        <div class="tablet-25">
+                                                            <a href="#" class="btnRPS item-link disabled">
+                                                                <img class="moveImage" src="assets/images/paper_L.png">
+                                                            </a>
+                                                        </div>
+                                                        <div class="tablet-25">
+                                                            <a href="#" class="btnRPS item-link disabled">
+                                                                <img class="moveImage" src="assets/images/scissors_L.png">
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-100 tablet-40">
+                                            <div class="card gZResult">
+                                                <div class="card-header no-hairline">
+                                                    <p id='resultHeader'></p>
+                                                </div>
+                                                <div class="card-content gRContent">
+                                                    <img class="gRImage" src="assets/images/rpsLogo.png" alt="">
+                                                </div>
+                                                <div class="card-footer no-hairline"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-100 tablet-30">
+                                            <div class="card" id="p2Zone">
+                                                <div class="card-header gZHeader">
+                                                    <p class="gZTitle"id="p2Title">Waiting for Player 2</p>
+                                                </div>
+                                                <div class="card-content gZContent">
+                                                    <div class="row gZContentTop" id="p1Move">
+
+                                                    </div>
+                                                    <div class="row gZContentBottom">
+                                                        <div class="col-50 colWL Lft">
+                                                            <div class="row">
+                                                                <span class="spWL">Wins</span>
+                                                            </div>
+                                                            <div class="row">
+                                                                <span class="spScore" id="p2Win">0</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-50 colWL Rght">
+                                                            <div class="row">
+                                                                <span class="spWL">Losses</span>
+                                                            </div>
+                                                            <div class="row">
+                                                                <span class="spScore" id="p2Lose">0</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card-footer gZFooter">
+                                                    <div class="row" id="p2Controls">
+                                                        <div class="tablet-25">
+                                                            <img class="moveImage" src="assets/images/Click.png">
+                                                        </div>
+                                                        <div class="tablet-25">
+                                                            <a href="#" class="btnRPS item-link disabled">
+                                                                <img class="moveImage" src="assets/images/rock_R.png">
+                                                            </a>
+                                                        </div>
+                                                        <div class="tablet-25">
+                                                            <a href="#" class="btnRPS item-link disabled">
+                                                                <img class="moveImage" src="assets/images/paper_R.png">
+                                                            </a>
+                                                        </div>
+                                                        <div class="tablet-25">
+                                                            <a href="#" class="btnRPS item-link disabled">
+                                                                <img class="moveImage" src="assets/images/scissors_R.png">
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="assets/javascript/uuid.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script type="text/javascript" src="assets/javascript/framework7.min.js"></script>
+    <script type="text/javascript" src="assets/javascript/app.js"></script>
+    <script type="text/javascript" src="assets/javascript/config.js"></script>
+  </body>
+</html>
