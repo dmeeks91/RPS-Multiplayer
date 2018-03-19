@@ -30,7 +30,7 @@ $(document).ready(function(){
             loss: 0,
         },
         ties: 0,
-        whosTurn:'',
+        pTurn:0,
         hideShow: function(arr, hide) {
             $.each(arr, function(key, $slct){
                 (hide) ? $($slct).hide() : $($slct).show();
@@ -105,13 +105,17 @@ $(document).ready(function(){
 
             self.getPlayers(false).then(function(data)
                 {
+                    var pObj = data.pObj;
                     if (data.p1 || data.p2)
                     {
                         //already playing  
                         //This happens if user types in the same name as existing player
-                        self.setMyPID((data.p1) ? 'p1' : 'p2');                        
-                        self.myInfo.name = self.myName;
-                        self.showPlayerInfo('me');
+                        self.notify({
+                            title: `Please enter a different name`,
+                            closeTimeout: 2500,
+                            closeOnClick: true,
+                            text: 'Each player must have a unique name'
+                        })
                     }
                     else
                     {
@@ -119,28 +123,29 @@ $(document).ready(function(){
                         {
                             if (sObj.bool)
                             {
+                                pObj[sObj.spot].name = self.myName;
                                 self.setMyPID(sObj.spot);
                                 self.myInfo.name = self.myName;
                                 self.showPlayerInfo('me');
-                            }
-
-                            else
-                            {
-                                //startNew Game
-
+                                self.notify({
+                                    title: `Welcome, ${self.myInfo.name}`,
+                                    closeTimeout: 2500,
+                                    closeOnClick: true,
+                                    text: (pObj.p1.name === "") ? 'Waiting for Player# 1 to join' :
+                                              (pObj.p2.name === "") ? 'Waiting for Player# 2 to join' :
+                                              `Let's play!`
+                                })
                             }
                         })
                     }
-                })
-        },
-        greetPlayer: function(){
 
+                })
         },
         displayMove: function(srcPath)
         {
             $(`#${this.myPID}Move`).html(`<img class="bigMove" src="${srcPath}">`);
 
-            var a = srcPath.lastIndexOf('/')+1,
+            var a = srcPath.lastIndexOf('/') + 1,
                 b = srcPath.indexOf('_'),
                 type = srcPath.substring(a, b);
 
@@ -204,6 +209,15 @@ $(document).ready(function(){
 
             if (thisRef != null) thisRef.update(value);
         },
+        notify: function(obj) {
+            var params = {};
+            $.each(obj, function(key, value){
+                params[key] = value;
+            })
+            var notif = app.notification.create(params);
+
+            notif.open();
+        },
         startUp: function(){
             var self = this;
 
@@ -212,19 +226,29 @@ $(document).ready(function(){
             $('#p1Title').text('...Waiting for Player 1...');
             $('#p2Title').text('...Waiting for Player 2...');
 
+
             self.getPlayers(true).then(function(pObj){
                 if(pObj.p1 && pObj.p2)
                 {
                     self.hideShow(['#gameZone', '#userInfo'], true);
-                    console.log('only 2 people can play at a time');
+
+                    self.notify({
+                        title: 'Access Denied',                        
+                        text: `Only 2 people can play at a time. Multi-Game Feature coming-soon`,
+                        closeButton: true,
+                    });
                 }
-                else if(pObj.p1 && !pObj.p2)
+                else 
                 {
-                    self.setMyPID((pObj.p1 && !pObj.p2) ? 'p2' : 'p1');
-                    self.getFBVal('playersObj',self.oppPID).then(function(pObj){
-                        self.oppInfo = pObj;
-                        self.showPlayerInfo('opp');                        
-                    })
+                    toastr['info'](`Enter your name and click 'Play' to begin`);
+                    if((pObj.p1 && !pObj.p2) || (!pObj.p1 && pObj.p2))
+                    {
+                        self.setMyPID((pObj.p1) ? 'p2' : 'p1');
+                        self.getFBVal('playersObj',self.oppPID).then(function(pObj){
+                            self.oppInfo = pObj;
+                            self.showPlayerInfo('opp');                        
+                        })
+                    }
                 }
             });
         },
@@ -233,18 +257,26 @@ $(document).ready(function(){
                 id = (type === 'me') ? self.myPID : self.oppPID
                 info = (type === 'me') ? self.myInfo : self.oppInfo;
 
-            self.updateFB('playersObj', id, info);
-            self.hideShow([`#${id}Controls`], (type != 'me'));
-            self.hideShow(['#userInfo'],(self.myName != ''));
+            if (self.pTurn === 0)
+            {
+                //actions that only need to take place on initialization
+                self.hideShow([`#${id}Controls`], (type != 'me'));
+                self.hideShow(['#userInfo'],(self.myName != ''));
+                $(`#${id}Title`).text(info.name);
 
-            $(`#${id}Title`).text(info.name);
+            }
+
+            self.updateFB('playersObj', id, info);       
+            
+            $(`#${id}Win`).text(info.win);
+            $(`#${id}Lose`).text(info.loss);
         },
         setMyPID: function(id){
             this.myPID = id;
             this.oppPID = (id === 'p1') ? 'p2' : 'p1';
         },
         regPlayerChange: function(type, pInfo, key)
-        {
+        {            
             if (type === 'blank') return;           
 
             if (type === 'NA')
@@ -254,24 +286,17 @@ $(document).ready(function(){
             }
 
             this[(type === 'me') ? 'myInfo' : 'oppInfo'] = pInfo;
-
-            /* switch (type)
-            {
-                case 'blank':
-                    return;
-                case 'me':
-                    this.myInfo = pInfo;
-                    break;
-                case 'NA': //opp has logged in but you haven't
-                    this.setMyPID(key); 
-                    type = 'opp'; 
-                    //no break on purpoe  
-                case 'opp':
-                    this.oppInfo = pInfo;    
-                    break;
-            } */
-
             this.showPlayerInfo(type);
+        },
+        regChange: function(snapshot){
+            var player = snapshot.val(),
+            pKey = snapshot.key,
+            oppKey = (pKey != 'p1') ?  'p1' : 'p2',
+            type = (player.name != "" && rpsGame.myName != "" && rpsGame.myPID != "") ? 
+                   ((pKey != rpsGame.myPID) ? 'opp' : 'me') : 
+                   (player.name != "" && player.name != rpsGame.myName) ? 'NA' :'blank';
+            
+            rpsGame.regPlayerChange(type, player, oppKey);
         }
     };
 
@@ -296,50 +321,27 @@ $(document).ready(function(){
 
     db.ref('game/players').on('child_added', function(snapshot) {
         var player = snapshot.val();
-        if(player.name != "")//player != null &&
+        if(player.name != "")
         {
             //someone has already joined the game on page load
             rpsGame.setMyPID((snapshot.key === 'p1') ? 'p2' : 'p1')       
         }
-
-        //console.log('which player: ' + snapshot.key);
-        //console.log(`myPID: ${rpsGame.myPID}, myName: ${rpsGame.myName}`);
     });
-
-    /* db.ref('game/players').on('value', function(snapshot) {
-        console.log(snapshot.val());
-    }) */
 
     //setRef to track p1 changes
     db.ref('game/players').child('p1').on('value', function(snapshot) {
-        var player = snapshot.val(),
-            pKey = snapshot.key;
-            type = (player.name != "" && rpsGame.myName != "" && rpsGame.myPID != "") ? 
-                   ((pKey != rpsGame.myPID) ? 'opp' : 'me') : 
-                   (player.name != "" && player.name != rpsGame.myName) ? 'NA' :'blank';
-            
-            rpsGame.regPlayerChange(type, player, 'p2');
-            if (type != 'blank')console.log(`change to ${type}`);  
+        rpsGame.regChange(snapshot); 
     });
 
     //setRef to track p2 changes
     db.ref('game/players').child('p2').on('value', function(snapshot) {
-        var player = snapshot.val(),
-            type =  (player.name != "" && rpsGame.myName != "" && rpsGame.myPID != "") ? 
-                    ((snapshot.key != rpsGame.myPID) ? 'opp' : 'me') : 
-                    (player.name != "" && player.name != rpsGame.myName) ? 'NA' : 'blank';
-
-            rpsGame.regPlayerChange(type, player, 'p1');
-            if (type != 'blank')console.log(`change to ${type}`);
+        rpsGame.regChange(snapshot);
     });
+    
 
     $(".btnRPS").on('click', function(){
         var path = $(this).children().attr("src");
         rpsGame.displayMove(path);
-    })
-
-    $("#myName").on('change', function(){
-        //rpsGame.addRemoveClass(['.myBtn', 'disabled', false]);
     })
 
     $(".myBtn").on('click', function(){
