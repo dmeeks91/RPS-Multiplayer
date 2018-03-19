@@ -44,7 +44,7 @@ $(document).ready(function(){
         },
         addRemoveClass: function(arr, className, add){
             $.each(arr, function(key, $slct){
-                (add) ? $(target).addClass(className) : $(target).addClass(className);
+                (add) ? $($slct).addClass(className) : $($slct).removeClass(className);
             })            
         },
         isSpotOpen: function(data){
@@ -142,11 +142,16 @@ $(document).ready(function(){
                                               `Let's play! It's ${(pObj.p1.name === self.myInfo.name) ? 'your'
                                                 : pObj.p1.name + "'s"} turn first`
                                 })
-
-                                db.ref('game/status').set('startGame');
-
+                                
+                                if ((pObj.p1.name != "") && (pObj.p2.name != ""))
+                                {
+                                    //startGame if both p1 & p2 exist
+                                    db.ref('game/status').set('startGame');
+                                    db.ref('game/turn').set('-1');
+                                }
                                 //ref to clear player info on disconnect
-                                db.ref(`game/players/${self.myPID}`).onDisconnect().set(rpsGame.nullInfo);
+                                db.ref(`game/players/${self.myPID}`).onDisconnect().set(rpsGame.nullInfo);                                
+
                             }
                         })
                     }
@@ -277,7 +282,7 @@ $(document).ready(function(){
         },
         showPlayerInfo: function(type){
             var self = this,
-                id = (type === 'me') ? self.myPID : self.oppPID
+                id = (type === 'me') ? self.myPID : self.oppPID,
                 info = (type === 'me') ? self.myInfo : self.oppInfo;
 
             if (self.pTurn === 0)
@@ -295,9 +300,10 @@ $(document).ready(function(){
             $(`#${id}Lose`).text(info.loss);
         },
         startGame: function() {
-            if (this.pTurn === 0)
+            if (this.pTurn === -1)
             {
-
+                db.ref('game/status').set('playing');
+                db.ref('game/turn').set('p1');
             }
         },
         setMyPID: function(id){
@@ -360,12 +366,6 @@ $(document).ready(function(){
                     closeOnClick: true,
                     text: `Let's play! It's ${(self.myPID === 'p1') ? 'your' : pInfo.name + "'s"} turn first.`
                 });
-
-                //Start playing the game
-                //if (self.myPID === 'p1') setTimeout(function(){
-                    /* self.updateFB('gameProp', 'status', 'startGame'); */
-                    //db.ref('game/status').set('startGame')
-                //},500);
             }
             else if (type === 'oppExit')
             {
@@ -426,16 +426,21 @@ $(document).ready(function(){
 
     //setRef to track status
     db.ref('game/status').on('value', function(snapshot) {
-        var status = snapshot.val();
-        if (status === 'init')
-        {
-
-        }
-        else if (status = 'startGame')
+        if (snapshot.val() === 'startGame')
         {
             rpsGame.startGame();
         }
     });
+
+    db.ref('game/turn').on('value', function(snapshot) {
+        rpsGame.pTurn = snapshot.val(); 
+        if (rpsGame.pTurn != 0)
+        {
+            rpsGame.addRemoveClass([`#${rpsGame.pTurn}Zone`], 'activePlayer', true);
+            rpsGame.addRemoveClass([`#${(rpsGame.pTurn === 'p1') ? 'p2' : 'p1'}Zone`], 'activePlayer', false); 
+        }              
+               
+    })
 
     $(".btnRPS").on('click', function(){
         var path = $(this).children().attr("src");
