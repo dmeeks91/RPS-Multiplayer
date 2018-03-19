@@ -17,6 +17,12 @@ $(document).ready(function(){
         myPID: '', //playerID
         myName: '',
         oppPID: '',//opponent playerID
+        nullInfo: {
+            name:'',
+            move:"",
+            win:0,
+            loss:0,
+        },
         myInfo: {
             name:'',
             move:"",
@@ -133,8 +139,10 @@ $(document).ready(function(){
                                     closeOnClick: true,
                                     text: (pObj.p1.name === "") ? 'Waiting for Player# 1 to join' :
                                               (pObj.p2.name === "") ? 'Waiting for Player# 2 to join' :
-                                              `Let's play!`
+                                              `Let's play! It's ${(pObj.p1.name === self.myInfo.name) ? 'your'
+                                                : pObj.p1.name + "'s"} turn first`
                                 })
+                                db.ref(`game/players/${self.myPID}`).onDisconnect().set(rpsGame.nullInfo);
                             }
                         })
                     }
@@ -150,13 +158,6 @@ $(document).ready(function(){
                 type = srcPath.substring(a, b);
 
             this.updateFB('playerProp','move', type);
-        },
-        changePlayerValue: function(key,value){
-        },
-        isMyTurn: function(){
-        },
-        nextTurn: function(){
-
         },
         makeMove: function(type){
         },
@@ -226,31 +227,49 @@ $(document).ready(function(){
             $('#p1Title').text('...Waiting for Player 1...');
             $('#p2Title').text('...Waiting for Player 2...');
 
-
-            self.getPlayers(true).then(function(pObj){
-                if(pObj.p1 && pObj.p2)
-                {
-                    self.hideShow(['#gameZone', '#userInfo'], true);
-
-                    self.notify({
-                        title: 'Access Denied',                        
-                        text: `Only 2 people can play at a time. Multi-Game Feature coming-soon`,
-                        closeButton: true,
-                    });
-                }
-                else 
-                {
-                    toastr['info'](`Enter your name and click 'Play' to begin`);
-                    if((pObj.p1 && !pObj.p2) || (!pObj.p1 && pObj.p2))
+            //Check that FB is setup properly 
+            self.checkFBStruct().then(function(bool){
+                self.getPlayers(true).then(function(pObj){
+                    if(pObj.p1 && pObj.p2)
                     {
-                        self.setMyPID((pObj.p1) ? 'p2' : 'p1');
-                        self.getFBVal('playersObj',self.oppPID).then(function(pObj){
-                            self.oppInfo = pObj;
-                            self.showPlayerInfo('opp');                        
-                        })
+                        self.hideShow(['#gameZone', '#userInfo'], true);
+    
+                        self.notify({
+                            title: 'Access Denied',                        
+                            text: `Only 2 people can play at a time. Multi-Game Feature coming-soon`,
+                            closeButton: true,
+                        });
                     }
-                }
-            });
+                    else 
+                    {
+                        toastr['info'](`Enter your name and click 'Play' to begin`);
+                        if((pObj.p1 && !pObj.p2) || (!pObj.p1 && pObj.p2))
+                        {
+                            self.setMyPID((pObj.p1) ? 'p2' : 'p1');
+                            self.getFBVal('playersObj',self.oppPID).then(function(pObj){
+                                self.oppInfo = pObj;
+                                self.showPlayerInfo('opp');                        
+                            })
+                        }
+                    }
+                });
+            })            
+        },
+        checkFBStruct: function() {
+            var self = this;
+
+            return new Promise(
+                function(resolve, reject) {
+                    //check if players obj exists in DB
+                    self.getFBVal('gameProp','players').then(function(data) {
+                        if (data === null)
+                        {
+                            self.updateFB('playersObj','p1', self.myInfo);
+                            self.updateFB('playersObj','p2', self.myInfo);
+                        }
+                        resolve(true);
+                    })
+                });
         },
         showPlayerInfo: function(type){
             var self = this,
@@ -276,42 +295,58 @@ $(document).ready(function(){
             this.oppPID = (id === 'p1') ? 'p2' : 'p1';
         },
         regPlayerChange: function(type, pInfo, key)
-        {            
+        {   
+            var self = this;
+
             if (type === 'blank') return;           
 
             if (type === 'NA')
             {
-                this.setMyPID(key); 
+                self.setMyPID(key); 
                 type = 'opp';
             }
+            else if (type === 'opp' && self.pTurn === 0)
+            {
+                self.notify({
+                    title: `${pInfo.name} joined your game`,
+                    closeTimeout: 2500,
+                    closeOnClick: true,
+                    text: `Let's play! It's ${(self.myPID === 'p1') ? 'your' : pInfo.name + "'s"} turn first.`
+                });
 
-            this[(type === 'me') ? 'myInfo' : 'oppInfo'] = pInfo;
-            this.showPlayerInfo(type);
+                if (self.myPID === 'p1') setTimeout(function(){},500);
+            }
+            else if (type === 'oppExit')
+            {
+                self.notify({
+                    title: `${self.oppInfo.name} left the game`,
+                    closeTimeout: 2500,
+                    closeOnClick: true,
+                    text: `Wait here until another player comes to play.`
+                });
+            }            
+
+            self[(type === 'me') ? 'myInfo' : 'oppInfo'] = pInfo;
+            self.showPlayerInfo(type);
         },
         regChange: function(snapshot){
-            var player = snapshot.val(),
-            pKey = snapshot.key,
-            oppKey = (pKey != 'p1') ?  'p1' : 'p2',
-            type = (player.name != "" && rpsGame.myName != "" && rpsGame.myPID != "") ? 
-                   ((pKey != rpsGame.myPID) ? 'opp' : 'me') : 
-                   (player.name != "" && player.name != rpsGame.myName) ? 'NA' :'blank';
+            var self = this, 
+                player = snapshot.val(),
+                pKey = snapshot.key,
+                oppKey = (pKey != 'p1') ?  'p1' : 'p2',
+                type = (player.name != "" && self.myName != "" && self.myPID != "") ? 
+                    ((pKey != self.myPID) ? 'opp' : 'me') : 
+                    (player.name != "" && player.name != self.myName) ? 'NA' :
+                    (player.name === "" && self.myName != "" && self.myPID !="") ? 'oppExit' : 'blank';
             
-            rpsGame.regPlayerChange(type, player, oppKey);
+            self.regPlayerChange(type, player, oppKey);
         }
     };
 
-    /* db.ref().onDisconnect().remove(function(){
-        //console.log(rpsGame.myPID);
-    }); */
-
     db.ref('game').once("value").then(function(snapshot) {
         if(snapshot.val() === null)
-        {            
-            /* var gameObj = {
-                players: null,
-                turn:0
-            };
-            db.ref().set({game: {turn:0}}); */
+        {   
+            db.ref().set({game: {turn:0}});
         }
         else
         {
@@ -330,14 +365,18 @@ $(document).ready(function(){
 
     //setRef to track p1 changes
     db.ref('game/players').child('p1').on('value', function(snapshot) {
-        rpsGame.regChange(snapshot); 
+        if (snapshot.val() != null) rpsGame.regChange(snapshot); 
     });
 
     //setRef to track p2 changes
     db.ref('game/players').child('p2').on('value', function(snapshot) {
-        rpsGame.regChange(snapshot);
-    });
-    
+        if (snapshot.val() != null) rpsGame.regChange(snapshot);
+    });    
+
+    //setRef to track move changes
+    db.ref('game/turn').on('value', function(snapshot) {
+
+    })
 
     $(".btnRPS").on('click', function(){
         var path = $(this).children().attr("src");
@@ -352,7 +391,7 @@ $(document).ready(function(){
         }
     })
 
-    rpsGame.startUp();
+    rpsGame.startUp();    
 
     toastr.options = {
         "closeButton": false,
