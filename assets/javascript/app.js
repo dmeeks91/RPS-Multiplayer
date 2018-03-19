@@ -135,13 +135,17 @@ $(document).ready(function(){
                                 self.showPlayerInfo('me');
                                 self.notify({
                                     title: `Welcome, ${self.myInfo.name}`,
-                                    closeTimeout: 2500,
+                                    closeTimeout: 5000,
                                     closeOnClick: true,
                                     text: (pObj.p1.name === "") ? 'Waiting for Player# 1 to join' :
                                               (pObj.p2.name === "") ? 'Waiting for Player# 2 to join' :
                                               `Let's play! It's ${(pObj.p1.name === self.myInfo.name) ? 'your'
                                                 : pObj.p1.name + "'s"} turn first`
                                 })
+
+                                db.ref('game/status').set('startGame');
+
+                                //ref to clear player info on disconnect
                                 db.ref(`game/players/${self.myPID}`).onDisconnect().set(rpsGame.nullInfo);
                             }
                         })
@@ -219,16 +223,17 @@ $(document).ready(function(){
 
             notif.open();
         },
-        startUp: function(){
+        initRPS: function(){
             var self = this;
 
             self.hideShow(['#p1Controls', '#p2Controls'], true);
 
-            $('#p1Title').text('...Waiting for Player 1...');
-            $('#p2Title').text('...Waiting for Player 2...');
+            $('#p1Title').text('... Waiting for Player #1 ...');
+            $('#p2Title').text('... Waiting for Player #2 ...');
 
             //Check that FB is setup properly 
             self.checkFBStruct().then(function(bool){
+                //check to see if a player has already joined the game
                 self.getPlayers(true).then(function(pObj){
                     if(pObj.p1 && pObj.p2)
                     {
@@ -242,7 +247,6 @@ $(document).ready(function(){
                     }
                     else 
                     {
-                        toastr['info'](`Enter your name and click 'Play' to begin`);
                         if((pObj.p1 && !pObj.p2) || (!pObj.p1 && pObj.p2))
                         {
                             self.setMyPID((pObj.p1) ? 'p2' : 'p1');
@@ -290,6 +294,12 @@ $(document).ready(function(){
             $(`#${id}Win`).text(info.win);
             $(`#${id}Lose`).text(info.loss);
         },
+        startGame: function() {
+            if (this.pTurn === 0)
+            {
+
+            }
+        },
         setMyPID: function(id){
             this.myPID = id;
             this.oppPID = (id === 'p1') ? 'p2' : 'p1';
@@ -298,11 +308,48 @@ $(document).ready(function(){
         {   
             var self = this;
 
-            if (type === 'blank') return;           
+            if (type === 'blank') 
+            {
+                if (pInfo.name != "")
+                {
+                    self.notify({
+                        title: `${pInfo.name} joined the game`,
+                        closeTimeout: 2500,
+                        closeOnClick: true,
+                        text: `Enter your name and click 'Play' to start playing.`
+                    });
+                }
+                else if (self.oppPID != "")
+                {
+                    var oldOppName = $(`#${self.oppPID}Title`).text();
+                    var myName = $(`#${self.myPID}Title`).text();
+                    if (oldOppName != "" && oldOppName.substring(0,5) != '... W' && myName.substring(0,5) != '... W') 
+                    {
+                        self.notify({
+                            title: `${oldOppName} left the game`,
+                            closeTimeout: 2500,
+                            closeOnClick: true,
+                            text: `Enter your name and click 'Play' to join. 
+                                   Your game will start once another player joins`
+                        });
+                    }
+                    $(`#${self.oppPID}Title`).text(`... Waiting for Player #${self.oppPID[1]} ...`);
+                }
+                return;           
+            }
 
             if (type === 'NA')
             {
                 self.setMyPID(key); 
+                if (pInfo.name != "")  
+                {
+                    self.notify({
+                        title: `${pInfo.name} joined the game`,
+                        closeTimeout: 2500,
+                        closeOnClick: true,
+                        text: `Enter your name and click 'Play' to start playing.`
+                    });
+                }
                 type = 'opp';
             }
             else if (type === 'opp' && self.pTurn === 0)
@@ -314,7 +361,11 @@ $(document).ready(function(){
                     text: `Let's play! It's ${(self.myPID === 'p1') ? 'your' : pInfo.name + "'s"} turn first.`
                 });
 
-                if (self.myPID === 'p1') setTimeout(function(){},500);
+                //Start playing the game
+                //if (self.myPID === 'p1') setTimeout(function(){
+                    /* self.updateFB('gameProp', 'status', 'startGame'); */
+                    //db.ref('game/status').set('startGame')
+                //},500);
             }
             else if (type === 'oppExit')
             {
@@ -334,24 +385,19 @@ $(document).ready(function(){
                 player = snapshot.val(),
                 pKey = snapshot.key,
                 oppKey = (pKey != 'p1') ?  'p1' : 'p2',
-                type = (player.name != "" && self.myName != "" && self.myPID != "") ? 
-                    ((pKey != self.myPID) ? 'opp' : 'me') : 
-                    (player.name != "" && player.name != self.myName) ? 'NA' :
-                    (player.name === "" && self.myName != "" && self.myPID !="") ? 'oppExit' : 'blank';
+                type =  (player.name != "" && self.myName != "" && self.myPID != "") ? 
+                        ((pKey != self.myPID) ? 'opp' : 'me') :                         
+                        (player.name != "" && player.name != self.myName) ? 'NA' :
+                        /* (player.name === "" && self.myName != "" && self.myPID !="") ? 'oppExit' : */
+                        (player.name != "" && self.myName === "") ? 'oppEnter': 'blank';
             
             self.regPlayerChange(type, player, oppKey);
         }
     };
 
-    db.ref('game').once("value").then(function(snapshot) {
-        if(snapshot.val() === null)
-        {   
-            db.ref().set({game: {turn:0}});
-        }
-        else
-        {
-            //setUpGame with UserDetails
-        }
+    db.ref('game').once("value").then(function(snapshot) {   
+        db.ref('game/turn').set(0);
+        db.ref('game/status').set('init');
     });
 
     db.ref('game/players').on('child_added', function(snapshot) {
@@ -376,7 +422,20 @@ $(document).ready(function(){
     //setRef to track move changes
     db.ref('game/turn').on('value', function(snapshot) {
 
-    })
+    });
+
+    //setRef to track status
+    db.ref('game/status').on('value', function(snapshot) {
+        var status = snapshot.val();
+        if (status === 'init')
+        {
+
+        }
+        else if (status = 'startGame')
+        {
+            rpsGame.startGame();
+        }
+    });
 
     $(".btnRPS").on('click', function(){
         var path = $(this).children().attr("src");
@@ -391,7 +450,7 @@ $(document).ready(function(){
         }
     })
 
-    rpsGame.startUp();    
+    rpsGame.initRPS();    
 
     toastr.options = {
         "closeButton": false,
