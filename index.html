@@ -57,7 +57,7 @@
                             <div class="card" id="gZMainCard">
                                 <div class="card-content" id="gameHolder">
                                     <div class="row">
-                                        <div class="col-100 tablet-30">
+                                        <div class="col-40 tablet-30">
                                             <div class="card" id="p1Zone">
                                                 <div class="card-header gZHeader">
                                                     <p class="gZTitle" id="p1Title"></p>
@@ -91,17 +91,17 @@
                                                             <img class="moveImage" src="assets/images/Click.png">
                                                         </div>
                                                         <div class="tablet-25">
-                                                            <a href="#" class="btnRPS item-link disabled">
+                                                            <a href="#" class="btnRPS item-link disabled" id="p1BtnRock">
                                                                 <img class="moveImage" src="assets/images/rock_L.png">
                                                             </a>
                                                         </div>
                                                         <div class="tablet-25">
-                                                            <a href="#" class="btnRPS item-link disabled">
+                                                            <a href="#" class="btnRPS item-link disabled" id="p1BtnPaper">
                                                                 <img class="moveImage" src="assets/images/paper_L.png">
                                                             </a>
                                                         </div>
                                                         <div class="tablet-25">
-                                                            <a href="#" class="btnRPS item-link disabled">
+                                                            <a href="#" class="btnRPS item-link disabled" id="p1BtnScissors">
                                                                 <img class="moveImage" src="assets/images/scissors_L.png">
                                                             </a>
                                                         </div>
@@ -109,24 +109,48 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-100 tablet-40">
+                                        <div class="col-20 tablet-40">
                                             <div class="card gZResult">
                                                 <div class="card-header no-hairline">
-                                                    <p id='resultHeader'></p>
+                                                    <div class="row">
+                                                        <div class="col turnColOdd">
+
+                                                        </div>
+                                                        <div class="col turnColEven">
+
+                                                        </div>
+                                                        <div class="col turnColOdd">
+
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div class="card-content gRContent">
-                                                    <img class="gRImage" src="assets/images/rpsLogo.png" alt="">
+                                                    <div class="row gRContentRow">
+                                                        <img class="gRImage" src="assets/images/rpsLogo.png" alt="">
+                                                    </div>
                                                 </div>
-                                                <div class="card-footer no-hairline"></div>
+                                                <div class="card-footer no-hairline">
+                                                    <div class="row">
+                                                        <div class="col turnColEven">
+
+                                                        </div>
+                                                        <div class="col turnColOdd">
+                                                            
+                                                        </div>
+                                                        <div class="col turnColEven">
+
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-100 tablet-30">
+                                        <div class="col-40 tablet-30">
                                             <div class="card" id="p2Zone">
                                                 <div class="card-header gZHeader">
                                                     <p class="gZTitle"id="p2Title">Waiting for Player 2</p>
                                                 </div>
                                                 <div class="card-content gZContent">
-                                                    <div class="row gZContentTop" id="p1Move">
+                                                    <div class="row gZContentTop" id="p2Move">
 
                                                     </div>
                                                     <div class="row gZContentBottom">
@@ -154,17 +178,17 @@
                                                             <img class="moveImage" src="assets/images/Click.png">
                                                         </div>
                                                         <div class="tablet-25">
-                                                            <a href="#" class="btnRPS item-link disabled">
+                                                            <a href="#" class="btnRPS item-link disabled" id="p2BtnRock">
                                                                 <img class="moveImage" src="assets/images/rock_R.png">
                                                             </a>
                                                         </div>
                                                         <div class="tablet-25">
-                                                            <a href="#" class="btnRPS item-link disabled">
+                                                            <a href="#" class="btnRPS item-link disabled" id="p2BtnPaper">
                                                                 <img class="moveImage" src="assets/images/paper_R.png">
                                                             </a>
                                                         </div>
                                                         <div class="tablet-25">
-                                                            <a href="#" class="btnRPS item-link disabled">
+                                                            <a href="#" class="btnRPS item-link disabled" id="p2BtnScissors">
                                                                 <img class="moveImage" src="assets/images/scissors_R.png">
                                                             </a>
                                                         </div>

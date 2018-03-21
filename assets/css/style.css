@@ -48,7 +48,7 @@
 
 .moveImage{
     width: 90%;
-    height: 45px;
+    height: 100%;
     margin: auto;
 }
 .bigMove{
@@ -81,10 +81,11 @@
     box-shadow: 2px 4px 2px #1475c2;
     border-radius: 5px;
     border: 1px solid #acd6f8;
+    max-width: 100%;
 }
 
 .activePlayer {
-    box-shadow: 6px 4px 2px #4cd964d6;
+    box-shadow: 6px 4px 2px #4cd964d6 !important;
     border: 4px solid #e5e9ee;
 }
 
@@ -117,7 +118,7 @@
 }
 
 .toast-error, .toast-warning {
-    width: 100% !important;
+    width: 50% !important;
     margin: auto !important;
     left: .25% !important;
     background-color: #ab312a !important;
@@ -141,13 +142,13 @@
     opacity: .2;
 }
 
-#toast-container {
-    top: 20% !important;
+.toast-center{
+    top: 50%;
     width: 100%;
     margin: auto;
 }
 
-.myBtn{
+.myBtn {
     border: 2px solid #fff;
     border-radius: 25px;
     text-align: center;
@@ -160,8 +161,12 @@
     min-width: 75%;
 }
 
-.w80{
+.w80 {
     width: 80%;
+}
+
+.w33 {
+    width: 33.3%;
 }
 
 .w20{
@@ -172,6 +177,7 @@
 #gZMainCard{
     max-width: 1175px;
     margin: auto;
+    border-radius: 5px;
 }
 
 .gZHeader{
@@ -179,6 +185,7 @@
     text-align: center;
     background-color: #2196f3;
     border: 1px solid white;
+    height: 55px;
 }
 
 #p1Zone, #p2Zone {
@@ -220,8 +227,6 @@
 .gRImage{
     width: 98%;
     margin: auto;
-    height: 180px;
-    margin-top: 10px;
 }
 
 .gZResult {
@@ -236,16 +241,46 @@
     height: 55px;
 }
 
-.gZFooter .row{
-    height: 98%;
-    width: 100%;
+#toast-container .toast-close-button {
+    text-align: right;
 }
 
-.colWL{
+.toast-bottom-center .toast-info {
+    padding-bottom: 5%;
+}
+
+.gZFooter .row, 
+.card-header .row, 
+.gZResult .card-footer .row,
+.gRContent .row{
+    height: 98%;
+    width: 100%;
+    margin: auto;
+}
+
+.gZResult .card-header, 
+.gZResult .card-footer {
+    height: 55px;
+}
+
+.colWL,
+.turnColEven,
+.turnColOdd{
     height: 100%;
 } 
 
-.spWL, .spScore{    
+.tablet-25 {
+    height: 98%;
+    width: 25%;
+}
+
+.turnColEven img,
+.turnColOdd img {
+    width: 80%;
+    margin: auto;
+    height: 100%;
+}
+.spWL, .spScore {    
     text-align: center;
     color: #2196f3;
     font-weight: bold;
@@ -253,7 +288,7 @@
     width: 75%;
     margin: auto;    
 }
-.spScore{
+.spScore {
     font-size: 125%;
     padding: 1%;
 }

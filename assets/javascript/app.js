@@ -14,6 +14,7 @@ $(document).ready(function(){
   var db = firebase.database();
 
     var rpsGame = {
+        moves: ['rock', 'scissors', 'paper'],
         myPID: '', //playerID
         myName: '',
         oppPID: '',//opponent playerID
@@ -146,8 +147,9 @@ $(document).ready(function(){
                                 if ((pObj.p1.name != "") && (pObj.p2.name != ""))
                                 {
                                     //startGame if both p1 & p2 exist
+                                    db.ref('game/turn').set(-1);
                                     db.ref('game/status').set('startGame');
-                                    db.ref('game/turn').set('-1');
+                                    
                                 }
                                 //ref to clear player info on disconnect
                                 db.ref(`game/players/${self.myPID}`).onDisconnect().set(rpsGame.nullInfo);                                
@@ -166,7 +168,11 @@ $(document).ready(function(){
                 b = srcPath.indexOf('_'),
                 type = srcPath.substring(a, b);
 
-            this.updateFB('playerProp','move', type);
+            //Set move in FB
+            db.ref(`game/players/${rpsGame.myPID}/move`).set(type);
+
+            //Set next Turn 
+            db.ref(`game/turn`).set((this.myPID==='p1') ? 'p2' : 'score');
         },
         makeMove: function(type){
         },
@@ -273,8 +279,8 @@ $(document).ready(function(){
                     self.getFBVal('gameProp','players').then(function(data) {
                         if (data === null)
                         {
-                            self.updateFB('playersObj','p1', self.myInfo);
-                            self.updateFB('playersObj','p2', self.myInfo);
+                            self.updateFB('playersObj','p1', self.nullInfo);
+                            self.updateFB('playersObj','p2', self.nullInfo);
                         }
                         resolve(true);
                     })
@@ -305,6 +311,72 @@ $(document).ready(function(){
                 db.ref('game/status').set('playing');
                 db.ref('game/turn').set('p1');
             }
+        },
+        enableControls: function() {
+            rpsGame.addRemoveClass([`#${rpsGame.myPID}BtnRock`,
+                                    `#${rpsGame.myPID}BtnPaper`,
+                                    `#${rpsGame.myPID}BtnScissors`], 'disabled', (rpsGame.pTurn != rpsGame.myPID));
+        },
+        endTurn: function() {
+            var self = this;            
+            setTimeout(function(){                
+                db.ref(`game/players/${self.myPID}`).update(self.myInfo);
+                db.ref(`game/status`).set('nextTurn'); 
+            },2500);
+        },
+        scoreTurn: function() {
+            var self = this;
+            if (self.myInfo.move != "" && self.oppInfo.move != "")
+            {
+                var myMoveIndex = self.moves.indexOf(self.myInfo.move),
+                    oppMoveIndex = self.moves.indexOf(self.oppInfo.move),
+                    result = self.getResult(myMoveIndex, oppMoveIndex, self.myInfo.move);
+                    //display image in center, increment win/loss
+                    $('.gRContentRow').html(`<img class="gRImage" src="assets/images/${result.img}">`);
+
+
+                //show oppMove
+                var imgPath = `<img class="bigMove"src="assets/images/`,
+                    imgFile = `${self.oppInfo.move}_${(self.oppPID != 'p1') ? 'R' : 'L'}.png">`;
+                $(`#${self.oppPID}Move`).html(imgPath + imgFile);
+
+                //alert user of outcome
+                var msg = (result.type === "win") ? "You Won!" : (result.type === "loss") ? "You Loss" : "Tie Game";
+                var tType = (result.type === "win") ? "success" : (result.type === "loss") ? "error" : "info";
+                rpsGame.updateToastOptions({"positionClass": "toast-center",
+                                            "closeButton": false,    
+                                            "timeOut": "1800"});
+                toastr[tType](msg);
+
+                //increment win loss
+                if (result.type != "tie") self.myInfo[result.type] ++;                
+                
+                //setTimeout(function(){
+                self.endTurn();
+                //},2500)
+                
+                
+            }
+        },
+        getResult: function(mv1, mv2, mv1String) {
+            switch (mv1 - mv2)
+            {
+                case 0:
+                    return {type: 'tie', img: 'rpsLogo.png'};
+                    break;
+                case -1:
+                case 2:
+                    return {type: 'win', img: `${mv1String}Win.png`};    
+                    break;
+                case 1:
+                case-2:
+                    var whoWon = (mv1String === 'rock') ? "paper" : 
+                                 (mv1String === 'paper') ? "scissors" : "rock";
+                    return {type: 'loss', img: `${whoWon}Win.png`};
+                    break;
+            }
+
+            
         },
         setMyPID: function(id){
             this.myPID = id;
@@ -340,6 +412,7 @@ $(document).ready(function(){
                         });
                     }
                     $(`#${self.oppPID}Title`).text(`... Waiting for Player #${self.oppPID[1]} ...`);
+                    //db.ref(`game/players/${self.myPID}/move`).set("");
                 }
                 return;           
             }
@@ -388,10 +461,15 @@ $(document).ready(function(){
                 type =  (player.name != "" && self.myName != "" && self.myPID != "") ? 
                         ((pKey != self.myPID) ? 'opp' : 'me') :                         
                         (player.name != "" && player.name != self.myName) ? 'NA' :
-                        /* (player.name === "" && self.myName != "" && self.myPID !="") ? 'oppExit' : */
                         (player.name != "" && self.myName === "") ? 'oppEnter': 'blank';
             
             self.regPlayerChange(type, player, oppKey);
+        },
+        updateToastOptions: function(params)
+        {
+            $.each(params, function(key, value){
+                toastr.options[key] = value;
+            })
         }
     };
 
@@ -418,32 +496,57 @@ $(document).ready(function(){
     db.ref('game/players').child('p2').on('value', function(snapshot) {
         if (snapshot.val() != null) rpsGame.regChange(snapshot);
     });    
-
-    //setRef to track move changes
-    db.ref('game/turn').on('value', function(snapshot) {
-
-    });
-
+    
     //setRef to track status
     db.ref('game/status').on('value', function(snapshot) {
         if (snapshot.val() === 'startGame')
         {
             rpsGame.startGame();
         }
+        else if (snapshot.val() === 'nextTurn')
+        {
+            $('#p1Move').empty();
+            $('#p2Move').empty();
+            $('.gRContentRow').html(`<img class="gRImage" src="assets/images/rpsLogo.png">`);
+            db.ref('game/status').set('playing');
+            db.ref('game/turn').set('p1');
+        }
     });
 
     db.ref('game/turn').on('value', function(snapshot) {
         rpsGame.pTurn = snapshot.val(); 
-        if (rpsGame.pTurn != 0)
+        if (rpsGame.pTurn === 'score')
         {
-            rpsGame.addRemoveClass([`#${rpsGame.pTurn}Zone`], 'activePlayer', true);
-            rpsGame.addRemoveClass([`#${(rpsGame.pTurn === 'p1') ? 'p2' : 'p1'}Zone`], 'activePlayer', false); 
-        }              
-               
-    })
+            //Clear arrows
+            $(`.turnColOdd`).empty();
+            $(`.turnColEven`).empty();
+            rpsGame.addRemoveClass(['#p1Zone', '#p2Zone'], 'activePlayer', false);
+            rpsGame.scoreTurn();            
+            rpsGame.enableControls();
+        }
+        else if (typeof rpsGame.pTurn === 'string')
+        {
+            //Show arrows
+            $(`.turnColOdd`).html(`<img src="assets/images/${rpsGame.pTurn}Odd.png">`);
+            $(`.turnColEven`).html(`<img src="assets/images/${rpsGame.pTurn}Even.png">`);
+
+            //Highlight Active Player Zone
+            rpsGame.addRemoveClass([`#${rpsGame.pTurn}Zone`], 'activePlayer', true);            
+            rpsGame.addRemoveClass([`#${(rpsGame.pTurn === 'p1') ? 'p2' : 'p1'}Zone`], 'activePlayer', false);
+            rpsGame.enableControls();         
+        }
+        else
+        {
+            //Clear arrows
+            $(`.turnColOdd`).empty();
+            $(`.turnColEven`).empty();
+            rpsGame.addRemoveClass(['#p1Zone', '#p2Zone'], 'activePlayer', false);
+        }            
+    });
 
     $(".btnRPS").on('click', function(){
-        var path = $(this).children().attr("src");
+        var id = $(this)[0].id,
+            path = $(`#${id} img`).attr("src");
         rpsGame.displayMove(path);
     })
 
@@ -457,18 +560,24 @@ $(document).ready(function(){
 
     rpsGame.initRPS();    
 
+    $(window).resize(function(){
+        var width = window.screen.width,
+            height = window.screen.height;
+
+        toastr.clear();
+
+        if (width < 650 && width< height)
+        {
+            rpsGame.updateToastOptions({"positionClass": "toast-bottom-center",
+                                        "closeButton": true,
+                                        "timeOut": "1500000"});
+            toastr["info"]("You'll have a better game experience if you turn this device on its side.");
+            console.log($('#toast-container'));
+        }
+    })
+
     toastr.options = {
-        "closeButton": false,
-        "debug": false,
-        "newestOnTop": false,
-        "progressBar": false,
-        "positionClass": "toast-bottom-center",
-        "preventDuplicates": true,
-        "onclick": null,
-        "showDuration": "300",
-        "hideDuration": "1000",
-        "timeOut": "2500",
-        "extendedTimeOut": "1000",
+        "preventDuplicates": true,        
         "showEasing": "swing",
         "hideEasing": "linear",
         "showMethod": "fadeIn",
@@ -476,3 +585,4 @@ $(document).ready(function(){
     };
     
 });
+
